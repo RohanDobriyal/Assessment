@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mall of America — Destination Experience</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Barlow:wght@100;200;300;400;500&family=Barlow+Condensed:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --gold: #BF9B4E;
+  --gold-light: #D4B06A;
+  --gold-dim: rgba(191,155,78,0.18);
+  --gold-glow: rgba(191,155,78,0.06);
+  --dark: #09090C;
+  --dark2: #0F0F14;
+  --dark3: #141419;
+  --cream: #F2EDE3;
+  --glass: rgba(255,255,255,0.03);
+  --glass-b: rgba(255,255,255,0.07);
+  --text-dim: rgba(255,255,255,0.45);
+  --text-mid: rgba(255,255,255,0.65);
+}
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  background: var(--dark);
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  overflow-x: hidden;
+  cursor: default;
+}
+::selection { background: var(--gold); color: #000; }
+
+/* CURSOR */
+#cursor {
+  position: fixed; pointer-events: none; z-index: 9999;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold); mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+  transition: transform 0.08s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s;
+}
+#cursor-ring {
+  position: fixed; pointer-events: none; z-index: 9998;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid rgba(191,155,78,0.5);
+  transform: translate(-50%, -50%);
+  transition: transform 0.18s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s, border-color 0.3s;
+}
+body.hovering #cursor { width: 12px; height: 12px; }
+body.hovering #cursor-ring { width: 52px; height: 52px; border-color: var(--gold); }
+
+/* LOADER */
+#loader {
+  position: fixed; inset: 0; z-index: 10000;
+  background: var(--dark);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 32px;
+}
+.loader-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px; font-weight: 300; letter-spacing: 0.08em;
+  color: #fff; opacity: 0;
+}
+.loader-logo span { color: var(--gold); font-style: italic; }
+.loader-bar-wrap {
+  width: 200px; height: 1px;
+  background: rgba(255,255,255,0.08);
+  position: relative; overflow: hidden;
+}
+.loader-bar {
+  position: absolute; left: 0; top: 0;
+  height: 100%; background: var(--gold);
+  width: 0%; transition: width 0.05s linear;
+}
+.loader-pct {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 300; letter-spacing: 0.4em;
+  color: var(--text-dim);
+}
+
+/* HERO */
+#hero {
+  position: relative; width: 100%; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; background: #000;
+}
+#hero-video-wrap {
+  position: absolute; inset: 0; overflow: hidden;
+}
+#hero-video-wrap iframe {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 177.78vh;
+  height: 100vh;
+  min-width: 100%; min-height: 56.25vw;
+  transform: translate(-50%, -50%);
+  border: none; pointer-events: none;
+}
+.hero-vignette {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to top, rgba(9,9,12,1) 0%, rgba(9,9,12,0.55) 30%, rgba(9,9,12,0.2) 60%, rgba(9,9,12,0.5) 100%),
+    linear-gradient(to right, rgba(9,9,12,0.7) 0%, transparent 40%, transparent 60%, rgba(9,9,12,0.7) 100%);
+}
+.hero-content {
+  position: relative; z-index: 10;
+  text-align: center; max-width: 960px; padding: 0 40px;
+}
+.hero-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 300;
+  letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 28px;
+  opacity: 0; transform: translateY(16px);
+}
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(60px, 9vw, 112px);
+  font-weight: 300; line-height: 0.88;
+  letter-spacing: -0.02em; color: #fff;
+  margin-bottom: 28px;
+  opacity: 0; transform: translateY(24px);
+}
+.hero-title em { font-style: italic; color: var(--gold-light); }
+.hero-subtitle {
+  font-family: 'Barlow', sans-serif;
+  font-size: clamp(13px, 1.6vw, 17px); font-weight: 200;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-mid); margin-bottom: 56px; line-height: 1.8;
+  opacity: 0; transform: translateY(16px);
+}
+.hero-cta-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 24px; opacity: 0; transform: translateY(12px);
+}
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 14px;
+  border: 1px solid var(--gold); background: transparent;
+  color: var(--gold); padding: 18px 52px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 500; letter-spacing: 0.4em;
+  text-transform: uppercase; cursor: pointer;
+  transition: all 0.35s ease; position: relative; overflow: hidden;
+}
+.btn-primary::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--gold); transform: scaleX(0);
+  transform-origin: left; transition: transform 0.35s ease;
+}
+.btn-primary:hover::before { transform: scaleX(1); }
+.btn-primary span, .btn-primary svg {
+  position: relative; z-index: 1; transition: color 0.35s ease;
+}
+.btn-primary:hover span, .btn-primary:hover svg { color: #000; }
+.btn-primary svg { width: 18px; height: 18px; transition: transform 0.3s ease, color 0.35s ease; }
+.btn-primary:hover svg { transform: translateX(6px); }
+.hero-scroll-hint {
+  position: absolute; bottom: 48px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px; z-index: 10;
+  opacity: 0;
+}
+.hero-scroll-hint span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; letter-spacing: 0.45em;
+  color: var(--text-dim); text-transform: uppercase;
+}
+.scroll-arrow {
+  width: 1px; height: 48px;
+  background: linear-gradient(to bottom, var(--gold), transparent);
+  animation: scrollBounce 1.8s ease-in-out infinite;
+}
+@keyframes scrollBounce {
+  0%, 100% { opacity: 0.3; transform: scaleY(0.6) translateY(-8px); }
+  50% { opacity: 1; transform: scaleY(1) translateY(0); }
+}
+
+#experience { display: none; }
+
+/* NAV */
+#nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 800;
+  padding: 0 60px;
+  height: 72px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(9,9,12,0.95) 0%, transparent 100%);
+  transition: background 0.4s;
+}
+#nav.solid { background: rgba(9,9,12,0.97); border-bottom: 1px solid rgba(255,255,255,0.05); }
+.nav-brand { display: flex; align-items: baseline; gap: 10px; }
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 300; color: #fff; letter-spacing: 0.06em;
+}
+.nav-logo em { font-style: italic; color: var(--gold); }
+.nav-divider { width: 1px; height: 18px; background: var(--glass-b); }
+.nav-tagline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.4em;
+  color: var(--text-dim); text-transform: uppercase;
+}
+.nav-links { display: flex; align-items: center; gap: 40px; }
+.nav-link {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 400; letter-spacing: 0.32em;
+  text-transform: uppercase; color: var(--text-dim);
+  background: none; border: none; cursor: pointer;
+  transition: color 0.3s; padding: 4px 0;
+  position: relative;
+}
+.nav-link::after {
+  content: ''; position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  height: 1px; background: var(--gold);
+  transform: scaleX(0); transition: transform 0.3s;
+}
+.nav-link:hover, .nav-link.active { color: var(--gold); }
+.nav-link:hover::after, .nav-link.active::after { transform: scaleX(1); }
+.nav-cta {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.3em;
+  text-transform: uppercase; color: #000;
+  background: var(--gold); border: none;
+  padding: 10px 28px; cursor: pointer;
+  transition: background 0.3s, opacity 0.3s;
+}
+.nav-cta:hover { background: var(--gold-light); }
+
+/* SECTION INTRO */
+#section-intro {
+  position: relative; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 60%, rgba(191,155,78,0.05) 0%, transparent 70%);
+}
+.intro-bg {
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=2000&q=80');
+  background-size: cover; background-position: center;
+  opacity: 0.08; filter: saturate(0);
+}
+.intro-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(191,155,78,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(191,155,78,0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+.intro-inner {
+  position: relative; z-index: 10;
+  text-align: center; padding: 120px 60px;
+  max-width: 1100px;
+}
+.section-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 300;
+  letter-spacing: 0.5em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+}
+.section-label::before, .section-label::after {
+  content: ''; flex: 1; max-width: 80px;
+  height: 1px; background: var(--gold-dim);
+}
+.intro-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 6vw, 78px); font-weight: 300;
+  line-height: 0.92; letter-spacing: -0.01em;
+  color: #fff; margin-bottom: 32px;
+}
+.intro-title em { font-style: italic; color: var(--gold-light); }
+.intro-desc {
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px; font-weight: 300; line-height: 1.9;
+  color: var(--text-mid); max-width: 640px; margin: 0 auto 64px;
+}
+
+/* ── 3D MODEL VIEWER ── */
+.model-viewer-wrap {
+  position: relative; margin: 0 auto 0;
+  width: min(780px, 92vw);
+}
+
+/* Floor selector */
+.floor-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+  position: relative;
+  z-index: 20;
+}
+.floor-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.38em; text-transform: uppercase;
+  padding: 11px 26px;
+  border: 1px solid rgba(191,155,78,0.3);
+  border-right: none;
+  background: rgba(9,9,12,0.9);
+  color: rgba(191,155,78,0.55);
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, border-color 0.25s;
+  display: flex; align-items: center; gap: 8px;
+}
+.floor-btn:last-child { border-right: 1px solid rgba(191,155,78,0.3); }
+.floor-btn.active {
+  background: var(--gold);
+  color: #000;
+  border-color: var(--gold);
+}
+.floor-btn:not(.active):hover {
+  background: rgba(191,155,78,0.1);
+  color: var(--gold);
+  border-color: rgba(191,155,78,0.5);
+}
+.floor-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0;
+  opacity: 0.7;
+}
+.floor-btn.active .floor-dot { opacity: 1; }
+
+model-viewer {
+  width: 100%;
+  height: 460px;
+  background: transparent;
+  --progress-bar-color: var(--gold);
+  --progress-bar-height: 2px;
+  outline: none;
+  border: 1px solid rgba(191,155,78,0.15);
+  border-top: none;
+  display: block;
+}
+model-viewer::part(default-progress-bar) {
+  background-color: var(--gold);
+  height: 2px;
+}
+model-viewer::part(default-ar-button) { display: none; }
+
+/* Corner decorations */
+.model-frame {
+  position: absolute; pointer-events: none; z-index: 3;
+  top: 38px; left: 0; right: 0; bottom: 0;
+}
+.model-frame::before, .model-frame::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: rgba(191,155,78,0.4);
+  border-style: solid;
+}
+.model-frame::before { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
+.model-frame::after  { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
+.model-corner-tr {
+  position: absolute; width: 20px; height: 20px;
+  border-color: rgba(191,155,78,0.4); border-style: solid;
+  pointer-events: none; z-index: 3;
+  top: 50px; right: 12px; border-width: 1px 1px 0 0;
+}
+.model-corner-bl {
+  position: absolute; width: 20px; height: 20px;
+  border-color: rgba(191,155,78,0.4); border-style: solid;
+  pointer-events: none; z-index: 3;
+  bottom: 12px; left: 12px; border-width: 0 0 1px 1px;
+}
+.model-label {
+  position: absolute; bottom: 14px; right: 16px; z-index: 4;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.4em;
+  color: rgba(191,155,78,0.4); text-transform: uppercase;
+  pointer-events: none;
+}
+.model-drag-hint {
+  position: absolute; bottom: 14px; left: 16px; z-index: 4;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.3em;
+  color: rgba(255,255,255,0.25); text-transform: uppercase;
+  pointer-events: none;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* Floor info badge */
+.floor-info-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px;
+  background: rgba(9,9,12,0.92);
+  border: 1px solid rgba(191,155,78,0.15);
+  border-top: none;
+}
+.floor-info-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.38em;
+  color: var(--gold); text-transform: uppercase;
+}
+.floor-info-desc {
+  font-family: 'Barlow', sans-serif;
+  font-size: 11px; font-weight: 300;
+  color: var(--text-dim);
+}
+
+/* STATS */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-top: 80px;
+}
+.stat-cell {
+  padding: 36px 32px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  text-align: center;
+}
+.stat-cell:last-child { border-right: none; }
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 4vw, 52px); font-weight: 300;
+  color: var(--gold); line-height: 1;
+  margin-bottom: 8px; display: block;
+}
+.stat-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 300; letter-spacing: 0.3em;
+  color: var(--text-dim); text-transform: uppercase;
+}
+
+/* ZONE SECTIONS */
+.zone-section {
+  position: relative; min-height: 100vh;
+  display: flex; align-items: stretch;
+  overflow: hidden;
+}
+.zone-media {
+  position: relative; width: 55%; flex-shrink: 0;
+  overflow: hidden;
+}
+.zone-img {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1s ease, transform 8s ease;
+  transform: scale(1.06);
+}
+.zone-img.active { opacity: 1; transform: scale(1); }
+.zone-media-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, transparent 50%, rgba(9,9,12,1) 100%),
+              linear-gradient(to top, rgba(9,9,12,0.6) 0%, transparent 40%);
+  z-index: 2;
+}
+.zone-thumb-row {
+  position: absolute; bottom: 28px; left: 28px;
+  z-index: 10; display: flex; gap: 10px;
+}
+.zone-thumb {
+  width: 64px; height: 42px;
+  background-size: cover; background-position: center;
+  cursor: pointer; opacity: 0.45;
+  border: 1px solid transparent;
+  transition: opacity 0.3s, border-color 0.3s;
+}
+.zone-thumb:hover { opacity: 0.7; }
+.zone-thumb.active { opacity: 1; border-color: var(--gold); }
+.vid-badge {
+  position: absolute; top: 28px; left: 28px; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(9,9,12,0.75); border: 1px solid var(--glass-b);
+  padding: 8px 16px;
+}
+.vid-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+.vid-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 400; letter-spacing: 0.35em;
+  color: var(--gold); text-transform: uppercase;
+}
+.zone-info {
+  flex: 1; background: var(--dark2);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 80px 72px;
+  border-left: 1px solid rgba(255,255,255,0.05);
+}
+.zone-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 100px; font-weight: 300;
+  color: rgba(255,255,255,0.03); line-height: 1;
+  position: absolute; top: 32px; right: 40px;
+  pointer-events: none;
+}
+.zone-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 300;
+  letter-spacing: 0.45em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.zone-tag::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
+.zone-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(34px, 3.5vw, 54px); font-weight: 300;
+  line-height: 0.92; color: #fff; margin-bottom: 24px;
+}
+.zone-title em { font-style: italic; color: var(--gold-light); }
+.zone-body {
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px; font-weight: 300; line-height: 1.9;
+  color: var(--text-mid); margin-bottom: 36px;
+  max-width: 380px;
+}
+.zone-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: rgba(255,255,255,0.05);
+  margin-bottom: 40px;
+}
+.zstat { background: var(--dark2); padding: 20px 22px; }
+.zstat-n {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px; font-weight: 300; color: var(--gold);
+  line-height: 1; display: block; margin-bottom: 4px;
+}
+.zstat-l {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 300; letter-spacing: 0.28em;
+  color: var(--text-dim); text-transform: uppercase;
+}
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent; color: rgba(255,255,255,0.7);
+  padding: 14px 32px; cursor: pointer; width: fit-content;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 400; letter-spacing: 0.32em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+.btn-ghost svg { width: 16px; height: 16px; transition: transform 0.3s; }
+.btn-ghost:hover svg { transform: translateX(5px); }
+.zone-section.reverse { flex-direction: row-reverse; }
+.zone-section.reverse .zone-media-overlay {
+  background: linear-gradient(to left, transparent 50%, rgba(9,9,12,1) 100%),
+              linear-gradient(to top, rgba(9,9,12,0.6) 0%, transparent 40%);
+}
+.zone-section.reverse .zone-info { border-left: none; border-right: 1px solid rgba(255,255,255,0.05); }
+
+/* EVENTS */
+#section-events {
+  position: relative; min-height: 100vh;
+  display: flex; flex-direction: column;
+  background: var(--dark);
+}
+.events-hero-img {
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=2400&q=80');
+  background-size: cover; background-position: center top;
+  opacity: 0.22; filter: saturate(0.6);
+}
+.events-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(9,9,12,0.4) 0%, rgba(9,9,12,0.96) 100%);
+}
+.events-inner {
+  position: relative; z-index: 10;
+  padding: 120px 80px; flex: 1;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.events-header { max-width: 700px; margin-bottom: 64px; }
+.events-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: rgba(255,255,255,0.05);
+}
+.event-card {
+  background: rgba(9,9,12,0.85); padding: 40px 32px;
+  transition: background 0.3s;
+}
+.event-card:hover { background: rgba(191,155,78,0.06); }
+.event-card-icon {
+  width: 40px; height: 40px;
+  border: 1px solid var(--gold-dim);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+}
+.event-card-icon svg { width: 18px; height: 18px; stroke: var(--gold); fill: none; stroke-width: 1.5; }
+.event-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 300; color: #fff;
+  margin-bottom: 12px; line-height: 1.1;
+}
+.event-card-body {
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px; font-weight: 300; line-height: 1.7;
+  color: var(--text-dim);
+}
+
+/* SPONSORSHIP */
+#section-sponsor {
+  position: relative; padding: 140px 80px;
+  background: var(--dark2); overflow: hidden;
+}
+.sponsor-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 80% 20%, rgba(191,155,78,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(191,155,78,0.04) 0%, transparent 55%);
+}
+.sponsor-inner { position: relative; z-index: 10; }
+.sponsor-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center; margin-bottom: 80px;
+}
+.sponsor-left .section-label { justify-content: flex-start; }
+.sponsor-left .section-label::before { display: none; }
+.sponsor-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 5vw, 68px); font-weight: 300;
+  line-height: 0.9; color: #fff; margin-bottom: 28px;
+}
+.sponsor-title em { font-style: italic; color: var(--gold-light); }
+.sponsor-body {
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px; font-weight: 300; line-height: 1.9;
+  color: var(--text-mid); margin-bottom: 40px;
+}
+.sponsor-tiles {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px;
+  background: rgba(255,255,255,0.05);
+}
+.stile {
+  background: var(--dark2); padding: 32px 28px;
+  transition: background 0.3s;
+}
+.stile:hover { background: var(--dark3); }
+.stile-img {
+  width: 100%; aspect-ratio: 16/9;
+  background-size: cover; background-position: center;
+  margin-bottom: 18px; opacity: 0.7; transition: opacity 0.3s;
+}
+.stile:hover .stile-img { opacity: 1; }
+.stile-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.3em;
+  color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+}
+.stile-desc {
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px; font-weight: 300; line-height: 1.6;
+  color: var(--text-dim);
+}
+.opp-list {
+  display: flex; flex-direction: column; gap: 1px;
+  background: rgba(255,255,255,0.05);
+}
+.opp-item {
+  background: var(--dark2); padding: 24px 28px;
+  display: flex; align-items: flex-start; gap: 20px;
+  cursor: pointer; transition: background 0.3s;
+}
+.opp-item:hover { background: rgba(191,155,78,0.05); }
+.opp-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-weight: 300; color: var(--gold);
+  line-height: 1; flex-shrink: 0; width: 32px;
+}
+.opp-name {
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px; font-weight: 400; color: #fff; margin-bottom: 4px;
+}
+.opp-sub {
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px; font-weight: 300; color: var(--text-dim);
+}
+
+/* CTA */
+#section-cta {
+  position: relative; padding: 160px 80px;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; overflow: hidden; background: var(--dark);
+}
+.cta-bg {
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=2000&q=80');
+  background-size: cover; background-position: center;
+  opacity: 0.07; filter: saturate(0);
+}
+.cta-overlay {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(191,155,78,0.07) 0%, transparent 70%);
+}
+.cta-inner { position: relative; z-index: 10; max-width: 760px; }
+.cta-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(44px, 7vw, 88px); font-weight: 300;
+  line-height: 0.88; color: #fff; margin-bottom: 32px;
+}
+.cta-title em { font-style: italic; color: var(--gold-light); }
+.cta-body {
+  font-family: 'Barlow', sans-serif;
+  font-size: 16px; font-weight: 200; line-height: 1.8;
+  color: var(--text-mid); margin-bottom: 60px; letter-spacing: 0.04em;
+}
+.cta-buttons { display: flex; align-items: center; justify-content: center; gap: 20px; }
+
+/* FOOTER */
+footer {
+  background: var(--dark2);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 60px 80px 40px;
+}
+.footer-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 48px;
+}
+.footer-brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px; font-weight: 300; color: #fff;
+}
+.footer-brand-name em { font-style: italic; color: var(--gold); }
+.footer-brand-sub {
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px; font-weight: 300; color: var(--text-dim);
+  margin-top: 6px; letter-spacing: 0.1em;
+}
+.footer-links { display: flex; gap: 60px; }
+.footer-col-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 500; letter-spacing: 0.4em;
+  color: var(--gold); text-transform: uppercase; margin-bottom: 16px;
+}
+.footer-col-links { display: flex; flex-direction: column; gap: 10px; }
+.footer-col-links a {
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px; font-weight: 300; color: var(--text-dim);
+  text-decoration: none; transition: color 0.3s;
+}
+.footer-col-links a:hover { color: #fff; }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 28px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-copy {
+  font-family: 'Barlow', sans-serif;
+  font-size: 11px; font-weight: 300; color: var(--text-dim); letter-spacing: 0.06em;
+}
+.footer-address {
+  font-family: 'Barlow', sans-serif;
+  font-size: 11px; font-weight: 300; color: var(--text-dim);
+  letter-spacing: 0.06em; text-align: right;
+}
+
+/* REVEAL ANIMATIONS */
+.reveal { opacity: 0; transform: translateY(40px); }
+.reveal-left { opacity: 0; transform: translateX(-40px); }
+.reveal-right { opacity: 0; transform: translateX(40px); }
+.reveal-scale { opacity: 0; transform: scale(0.92); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--dark); }
+::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+/* WIPE */
+#wipe { position: fixed; inset: 0; z-index: 9990; background: var(--dark); opacity: 0; pointer-events: none; }
+
+/* NOISE */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 9995; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.025;
+}
+
+.divider { height: 1px; background: rgba(255,255,255,0.05); margin: 0 80px; }
+
+@media (max-width: 1024px) {
+  .zone-section { flex-direction: column !important; }
+  .zone-media { width: 100%; height: 50vh; }
+  .zone-media-overlay { background: linear-gradient(to bottom, transparent 60%, rgba(9,9,12,1) 100%) !important; }
+  .zone-info { padding: 56px 40px; }
+  .events-grid { grid-template-columns: 1fr 1fr; }
+  .sponsor-grid { grid-template-columns: 1fr; gap: 48px; }
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  #nav { padding: 0 28px; }
+  .nav-links { gap: 24px; }
+  .nav-cta { display: none; }
+  model-viewer { height: 340px; }
+}
+@media (max-width: 640px) {
+  .events-grid { grid-template-columns: 1fr; }
+  .sponsor-tiles { grid-template-columns: 1fr; }
+  .cta-buttons { flex-direction: column; }
+  #nav .nav-links { display: none; }
+  #section-sponsor { padding: 80px 28px; }
+  .events-inner { padding: 80px 28px; }
+  #section-cta { padding: 100px 28px; }
+  footer { padding: 48px 28px 32px; }
+  .footer-top { flex-direction: column; gap: 40px; }
+  .footer-links { flex-direction: column; gap: 32px; }
+  model-viewer { height: 280px; }
+  .floor-btn { padding: 10px 14px; font-size: 9px; letter-spacing: 0.2em; }
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="wipe"></div>
+
+<!-- LOADING SCREEN -->
+<div id="loader">
+  <div class="loader-logo" id="loader-logo">Mall of <span>America</span></div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
+  <div class="loader-pct" id="loader-pct">0%</div>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div id="hero-video-wrap">
+    <iframe
+      id="yt-player"
+      src="https://www.youtube.com/embed/oIoBwLK8JqM?autoplay=1&mute=1&loop=1&playlist=oIoBwLK8JqM&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1"
+      allow="autoplay; encrypted-media"
+      allowfullscreen
+    ></iframe>
+  </div>
+  <div class="hero-vignette"></div>
+  <div class="hero-content" id="hero-content">
+    <div class="hero-eyebrow" id="h-eyebrow">Bloomington, Minnesota · Est. 1992</div>
+    <h1 class="hero-title" id="h-title">Welcome to<br><em>Mall of America</em></h1>
+    <p class="hero-subtitle" id="h-sub">More than a shopping destination<br>A platform for retail, entertainment,<br>dining and experiences</p>
+    <div class="hero-cta-wrap" id="h-cta">
+      <button class="btn-primary" id="enter-btn">
+        <span>Enter Destination</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="hero-scroll-hint" id="hero-scroll-hint">
+    <div class="scroll-arrow"></div>
+    <span>Scroll to Discover</span>
+  </div>
+</section>
+
+<div id="experience">
+
+  <!-- FIXED NAV -->
+  <nav id="nav">
+    <div class="nav-brand">
+      <div class="nav-logo">Mall of <em>America</em></div>
+      <div class="nav-divider"></div>
+      <div class="nav-tagline">Destination Platform</div>
+    </div>
+    <div class="nav-links">
+      <button class="nav-link active" data-scroll="section-intro">Overview</button>
+      <button class="nav-link" data-scroll="section-retail">Retail</button>
+      <button class="nav-link" data-scroll="section-dining">Dining</button>
+      <button class="nav-link" data-scroll="section-attract">Attractions</button>
+      <button class="nav-link" data-scroll="section-events">Events</button>
+      <button class="nav-link" data-scroll="section-sponsor">Partnerships</button>
+    </div>
+    <button class="nav-cta" onclick="document.getElementById('section-cta').scrollIntoView({behavior:'smooth'})">Begin Conversation</button>
+  </nav>
+
+  <!-- INTRO / OVERVIEW -->
+  <section id="section-intro">
+    <div class="intro-bg"></div>
+    <div class="intro-grid"></div>
+    <div class="intro-inner">
+      <div class="section-label reveal">The Destination</div>
+      <h2 class="intro-title reveal">One Iconic Place.<br><em>Infinite Opportunity.</em></h2>
+      <p class="intro-desc reveal">Mall of America is America's largest shopping and entertainment complex — a living destination that draws 40 million visitors annually, generating unmatched commercial opportunity for retail, dining, entertainment, and brand partnerships.</p>
+
+      <!-- ═══════════════════════════════════════════
+           3D MODEL VIEWER WITH FLOOR SELECTOR
+      ════════════════════════════════════════════ -->
+      <div class="model-viewer-wrap reveal-scale">
+
+        <!-- FLOOR SELECTOR TABS -->
+        <div class="floor-selector">
+          <button class="floor-btn active" id="fbtn-g" onclick="setFloor('g')">
+            <span class="floor-dot"></span>Ground Floor
+          </button>
+          <button class="floor-btn" id="fbtn-1" onclick="setFloor('1')">
+            <span class="floor-dot"></span>First Floor
+          </button>
+          <button class="floor-btn" id="fbtn-2" onclick="setFloor('2')">
+            <span class="floor-dot"></span>Second Floor
+          </button>
+        </div>
+
+        <!-- MODEL VIEWER -->
+        <model-viewer
+          id="mall-model"
+          src="New_Store.glb"
+          alt="Mall of America 3D Model"
+          camera-controls
+          auto-rotate
+          auto-rotate-delay="2000"
+          rotation-per-second="6deg"
+          interaction-prompt="none"
+          loading="eager"
+          reveal="auto"
+          shadow-intensity="0"
+          exposure="1.2"
+          tone-mapping="neutral"
+          environment-image="neutral"
+          poster=""
+          camera-orbit="45deg 65deg 130%"
+          min-camera-orbit="auto 20deg 60%"
+          max-camera-orbit="auto 90deg 220%"
+          field-of-view="45deg"
+          ar
+          ar-modes="webxr scene-viewer"
+        ></model-viewer>
+
+        <!-- Corner frame decorations -->
+        <div class="model-frame"></div>
+        <div class="model-corner-tr"></div>
+        <div class="model-corner-bl"></div>
+        <div class="model-label">3D Destination Model</div>
+        <div class="model-drag-hint">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(191,155,78,0.5)" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Drag to rotate · Scroll to zoom
+        </div>
+
+        <!-- Floor info bar below the model -->
+        <div class="floor-info-bar">
+          <span class="floor-info-name" id="floor-info-name">Ground Floor</span>
+          <span class="floor-info-desc" id="floor-info-desc">Entry level · Main concourse · Anchor stores</span>
+        </div>
+
+      </div>
+      <!-- ═══════════════════════════════════════════
+           END 3D MODEL VIEWER
+      ════════════════════════════════════════════ -->
+
+      <!-- STATS BAR -->
+      <div class="stats-bar">
+        <div class="stat-cell reveal">
+          <span class="stat-num" data-target="40">0</span>
+          <span class="stat-label">Million Annual Visitors</span>
+        </div>
+        <div class="stat-cell reveal">
+          <span class="stat-num" data-target="520">0</span>
+          <span class="stat-label">Stores & Restaurants</span>
+        </div>
+        <div class="stat-cell reveal">
+          <span class="stat-num" data-target="5.6">0</span>
+          <span class="stat-label">Million Sq Ft</span>
+        </div>
+        <div class="stat-cell reveal">
+          <span class="stat-num" data-target="400">0</span>
+          <span class="stat-label">Events Per Year</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- RETAIL ZONE -->
+  <section id="section-retail" class="zone-section">
+    <div class="zone-media" id="retail-media">
+      <div class="zone-img active" style="background-image:url('https://images.unsplash.com/photo-1555529771-7888783a18d3?w=1400&q=80')" data-panel="retail" data-i="0"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1400&q=80')" data-panel="retail" data-i="1"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=1400&q=80')" data-panel="retail" data-i="2"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?w=1400&q=80')" data-panel="retail" data-i="3"></div>
+      <div class="zone-media-overlay"></div>
+      <div class="vid-badge"><div class="vid-dot"></div><div class="vid-text">Retail District</div></div>
+      <div class="zone-thumb-row">
+        <div class="zone-thumb active" style="background-image:url('https://images.unsplash.com/photo-1555529771-7888783a18d3?w=200&q=60')" data-panel="retail" data-i="0"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=200&q=60')" data-panel="retail" data-i="1"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=200&q=60')" data-panel="retail" data-i="2"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?w=200&q=60')" data-panel="retail" data-i="3"></div>
+      </div>
+    </div>
+    <div class="zone-info" style="position:relative;">
+      <div class="zone-num">01</div>
+      <div class="zone-tag reveal-right">Retail Zone</div>
+      <h2 class="zone-title reveal-right">America's <em>Premier</em><br>Retail Platform</h2>
+      <p class="zone-body reveal-right">Home to 520+ stores spanning luxury, lifestyle, fashion and specialty retail. Mall of America delivers unmatched national brand reach — millions of qualified, intentional shoppers pass through these corridors annually.</p>
+      <div class="zone-stats reveal-right">
+        <div class="zstat"><span class="zstat-n">520+</span><span class="zstat-l">Stores</span></div>
+        <div class="zstat"><span class="zstat-n">40M</span><span class="zstat-l">Annual Visitors</span></div>
+        <div class="zstat"><span class="zstat-n">5.6M</span><span class="zstat-l">Sq Ft Retail</span></div>
+        <div class="zstat"><span class="zstat-n">#1</span><span class="zstat-l">US Destination</span></div>
+      </div>
+      <button class="btn-ghost reveal-right">
+        <span>Explore Retail Opportunities</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- DINING ZONE -->
+  <section id="section-dining" class="zone-section reverse">
+    <div class="zone-media" id="dining-media">
+      <div class="zone-img active" style="background-image:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1400&q=80')" data-panel="dining" data-i="0"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1400&q=80')" data-panel="dining" data-i="1"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1400&q=80')" data-panel="dining" data-i="2"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1400&q=80')" data-panel="dining" data-i="3"></div>
+      <div class="zone-media-overlay"></div>
+      <div class="vid-badge"><div class="vid-dot"></div><div class="vid-text">Dining District</div></div>
+      <div class="zone-thumb-row">
+        <div class="zone-thumb active" style="background-image:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&q=60')" data-panel="dining" data-i="0"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=60')" data-panel="dining" data-i="1"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1552566626-52f8b828add9?w=200&q=60')" data-panel="dining" data-i="2"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200&q=60')" data-panel="dining" data-i="3"></div>
+      </div>
+    </div>
+    <div class="zone-info" style="position:relative;">
+      <div class="zone-num">02</div>
+      <div class="zone-tag reveal-left">Dining Zone</div>
+      <h2 class="zone-title reveal-left">A <em>Culinary</em><br>Universe</h2>
+      <p class="zone-body reveal-left">From fast-casual to fine dining, MOA's food ecosystem spans 50+ restaurants and dining experiences. Every meal extends dwell time, deepens engagement, and amplifies spend across the entire destination.</p>
+      <div class="zone-stats reveal-left">
+        <div class="zstat"><span class="zstat-n">50+</span><span class="zstat-l">Restaurants</span></div>
+        <div class="zstat"><span class="zstat-n">$1.2B</span><span class="zstat-l">Annual Spend</span></div>
+        <div class="zstat"><span class="zstat-n">6.5hr</span><span class="zstat-l">Avg Dwell Time</span></div>
+        <div class="zstat"><span class="zstat-n">150+</span><span class="zstat-l">Menu Concepts</span></div>
+      </div>
+      <button class="btn-ghost reveal-left">
+        <span>Explore Dining Opportunities</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ATTRACTIONS ZONE -->
+  <section id="section-attract" class="zone-section">
+    <div class="zone-media" id="attract-media">
+      <div class="zone-img active" style="background-image:url('https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?w=1400&q=80')" data-panel="attract" data-i="0"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1575997799012-6b99ac2e9e61?w=1400&q=80')" data-panel="attract" data-i="1"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=1400&q=80')" data-panel="attract" data-i="2"></div>
+      <div class="zone-img" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&q=80')" data-panel="attract" data-i="3"></div>
+      <div class="zone-media-overlay"></div>
+      <div class="vid-badge"><div class="vid-dot"></div><div class="vid-text">Attractions District</div></div>
+      <div class="zone-thumb-row">
+        <div class="zone-thumb active" style="background-image:url('https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?w=200&q=60')" data-panel="attract" data-i="0"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1575997799012-6b99ac2e9e61?w=200&q=60')" data-panel="attract" data-i="1"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=200&q=60')" data-panel="attract" data-i="2"></div>
+        <div class="zone-thumb" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=60')" data-panel="attract" data-i="3"></div>
+      </div>
+    </div>
+    <div class="zone-info" style="position:relative;">
+      <div class="zone-num">03</div>
+      <div class="zone-tag reveal-right">Attractions Zone</div>
+      <h2 class="zone-title reveal-right"><em>Entertainment</em><br>Drives Visitation</h2>
+      <p class="zone-body reveal-right">Nickelodeon Universe®, SEA LIFE Aquarium, FlyOver America — world-class attractions that transform a shopping trip into destination travel. Visitation drives retail. Retail drives partner value.</p>
+      <div class="zone-stats reveal-right">
+        <div class="zstat"><span class="zstat-n">30+</span><span class="zstat-l">Attractions</span></div>
+        <div class="zstat"><span class="zstat-n">7</span><span class="zstat-l">Unique Venues</span></div>
+        <div class="zstat"><span class="zstat-n">500K</span><span class="zstat-l">Aquarium Visits/yr</span></div>
+        <div class="zstat"><span class="zstat-n">#1</span><span class="zstat-l">Indoor Theme Park</span></div>
+      </div>
+      <button class="btn-ghost reveal-right">
+        <span>Explore Attraction Sponsorship</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- EVENTS -->
+  <section id="section-events">
+    <div class="events-hero-img"></div>
+    <div class="events-overlay"></div>
+    <div class="events-inner">
+      <div class="events-header">
+        <div class="section-label reveal" style="justify-content:flex-start;">Events Zone</div>
+        <h2 class="intro-title reveal" style="text-align:left;">The Rotunda <em>Stage.</em><br>Your Brand, Amplified.</h2>
+        <p class="intro-desc reveal" style="margin:0;text-align:left;max-width:580px;">Celebrity appearances, brand launches, cultural activations — the MOA Rotunda hosts 400+ events per year, reaching millions of engaged, qualified consumers at America's most iconic destination.</p>
+      </div>
+      <div class="events-grid">
+        <div class="event-card reveal">
+          <div class="event-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          <div class="event-card-title">400+ Events Per Year</div>
+          <div class="event-card-body">Continuous programming drives repeat visitation and sustained brand exposure throughout the calendar year.</div>
+        </div>
+        <div class="event-card reveal">
+          <div class="event-card-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="event-card-title">40K Rotunda Capacity</div>
+          <div class="event-card-body">The iconic central Rotunda transforms into stadium-scale experiences capable of holding tens of thousands of fans.</div>
+        </div>
+        <div class="event-card reveal">
+          <div class="event-card-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="event-card-title">98% Brand Recall</div>
+          <div class="event-card-body">Activations within MOA generate exceptional recall rates — turning experiential moments into lasting brand impressions.</div>
+        </div>
+        <div class="event-card reveal">
+          <div class="event-card-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+          <div class="event-card-title">100+ Brand Partners</div>
+          <div class="event-card-body">World-class brands from every category trust MOA as the premier venue for national activations and launches.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SPONSORSHIP -->
+  <section id="section-sponsor">
+    <div class="sponsor-bg"></div>
+    <div class="sponsor-inner">
+      <div class="sponsor-grid">
+        <div class="sponsor-left">
+          <div class="section-label reveal" style="justify-content:flex-start;"><span></span>Zone 05 · Sponsorship</div>
+          <h2 class="sponsor-title reveal">Premium <em>Partnership</em><br>Ecosystem</h2>
+          <p class="sponsor-body reveal">Digital displays, experiential activations, pop-up installations, branded environments — MOA offers unparalleled access to 40 million annual visitors at commercial America's most iconic destination.</p>
+          <div class="sponsor-tiles reveal-scale">
+            <div class="stile">
+              <div class="stile-img" style="background-image:url('https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&q=70')"></div>
+              <div class="stile-name">Digital Displays</div>
+              <div class="stile-desc">60+ premium digital screens across high-traffic zones and anchor corridors.</div>
+            </div>
+            <div class="stile">
+              <div class="stile-img" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&q=70')"></div>
+              <div class="stile-name">Pop-Up Activations</div>
+              <div class="stile-desc">Premium footprint locations in the highest-traffic areas of the mall.</div>
+            </div>
+            <div class="stile">
+              <div class="stile-img" style="background-image:url('https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&q=70')"></div>
+              <div class="stile-name">Branded Experiences</div>
+              <div class="stile-desc">Immersive, multi-day brand installations that drive earned media and social amplification.</div>
+            </div>
+          </div>
+        </div>
+        <div class="sponsor-right">
+          <div class="section-label reveal" style="justify-content:flex-start;">Partnership Opportunities</div>
+          <div class="opp-list reveal">
+            <div class="opp-item"><div class="opp-num">01</div><div><div class="opp-name">Naming Rights & Landmark Sponsorship</div><div class="opp-sub">Attach your brand to America's most-visited retail destination.</div></div></div>
+            <div class="opp-item"><div class="opp-num">02</div><div><div class="opp-name">Rotunda Stage Ownership</div><div class="opp-sub">Headline event programming with full branding and activation rights.</div></div></div>
+            <div class="opp-item"><div class="opp-num">03</div><div><div class="opp-name">Attraction Presenting Sponsorship</div><div class="opp-sub">Co-brand with Nickelodeon Universe, SEA LIFE, or FlyOver America.</div></div></div>
+            <div class="opp-item"><div class="opp-num">04</div><div><div class="opp-name">Digital Media Network</div><div class="opp-sub">Own the visual landscape across 60+ premium digital display locations.</div></div></div>
+            <div class="opp-item"><div class="opp-num">05</div><div><div class="opp-name">Experiential Pop-Up Program</div><div class="opp-sub">Permanent presence in premium, high-footfall activation zones.</div></div></div>
+            <div class="opp-item"><div class="opp-num">06</div><div><div class="opp-name">Custom Partnership Package</div><div class="opp-sub">Bespoke commercial structures tailored to your brand's objectives.</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- FINAL CTA -->
+  <section id="section-cta">
+    <div class="cta-bg"></div>
+    <div class="cta-overlay"></div>
+    <div class="cta-inner">
+      <div class="section-label reveal">Begin the Conversation</div>
+      <h2 class="cta-title reveal">Your Brand<br>Belongs <em>Here.</em></h2>
+      <p class="cta-body reveal">Join the world's most iconic retail and entertainment destination. Let's build something remarkable together — a partnership that reaches millions, drives results, and creates lasting cultural impact.</p>
+      <div class="cta-buttons reveal">
+        <button class="btn-primary">
+          <span>Schedule a Meeting</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn-ghost" style="color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.15);">
+          <span>Download Media Kit</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">Mall of <em>America</em></div>
+        <div class="footer-brand-sub">A Destination Platform · Bloomington, Minnesota</div>
+      </div>
+      <div class="footer-links">
+        <div>
+          <div class="footer-col-title">Experience</div>
+          <div class="footer-col-links">
+            <a href="#">Retail</a><a href="#">Dining</a>
+            <a href="#">Attractions</a><a href="#">Events</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Partners</div>
+          <div class="footer-col-links">
+            <a href="#">Sponsorship</a><a href="#">Advertising</a>
+            <a href="#">Brand Activations</a><a href="#">Media Kit</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <div class="footer-col-links">
+            <a href="#">Partnership Inquiries</a><a href="#">Leasing</a>
+            <a href="#">Press</a><a href="#">Schedule a Meeting</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Mall of America. All rights reserved.</div>
+      <div class="footer-address">60 E Broadway, Bloomington, MN 55425 · mallofamerica.com</div>
+    </div>
+  </footer>
+
+</div><!-- /#experience -->
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ── CURSOR ── */
+const cursor = document.getElementById('cursor');
+const ring   = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px';});
+(function animRing(){requestAnimationFrame(animRing);rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';})();
+document.querySelectorAll('button,a,.zone-thumb,.opp-item,.event-card,.stile,.floor-btn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'));
+});
+
+/* ── LOADER ── */
+const loaderLogo=document.getElementById('loader-logo');
+const loaderBar=document.getElementById('loader-bar');
+const loaderPct=document.getElementById('loader-pct');
+gsap.to(loaderLogo,{opacity:1,duration:1,ease:'power2.out'});
+let pct=0;
+const interval=setInterval(()=>{
+  pct+=Math.random()*8+2;
+  if(pct>=100){pct=100;clearInterval(interval);finishLoader();}
+  loaderBar.style.width=pct+'%';
+  loaderPct.textContent=Math.floor(pct)+'%';
+},120);
+function finishLoader(){
+  setTimeout(()=>{
+    gsap.to('#loader',{opacity:0,duration:0.8,ease:'power2.inOut',onComplete:()=>{
+      document.getElementById('loader').style.display='none';
+      animateHero();
+    }});
+  },400);
+}
+
+/* ── HERO ANIMATIONS ── */
+function animateHero(){
+  const tl=gsap.timeline({defaults:{ease:'power3.out'}});
+  tl.to('#h-eyebrow',{opacity:1,y:0,duration:1.1,delay:0.2})
+    .to('#h-title',{opacity:1,y:0,duration:1.4},'-=0.7')
+    .to('#h-sub',{opacity:1,y:0,duration:1.1},'-=0.9')
+    .to('#h-cta',{opacity:1,y:0,duration:0.9},'-=0.7')
+    .to('#hero-scroll-hint',{opacity:1,duration:0.8},'-=0.3');
+}
+
+/* ── ENTER DESTINATION ── */
+document.getElementById('enter-btn').addEventListener('click',()=>{
+  const wipe=document.getElementById('wipe');
+  gsap.timeline()
+    .to(wipe,{opacity:1,duration:0.5,ease:'power2.in'})
+    .call(()=>{
+      document.getElementById('hero').style.display='none';
+      document.getElementById('experience').style.display='block';
+      window.scrollTo(0,0);
+    })
+    .to(wipe,{opacity:0,duration:0.7,ease:'power2.out'})
+    .call(initExperience);
+});
+
+/* ── EXPERIENCE INIT ── */
+function initExperience(){
+  initNav();
+  initScrollAnimations();
+  initGalleries();
+  initCounters();
+  initModelViewer();
+}
+
+/* ══════════════════════════════════════════════
+   FLOOR SELECTOR — fully integrated
+══════════════════════════════════════════════ */
+var _floorTimer = null;
+
+var FLOORS = {
+  'g': {
+    orbit:  '45deg 65deg 130%',
+    target: '0m 0m 0m',
+    name:   'Ground Floor',
+    desc:   'Entry level · Main concourse · Anchor stores'
+  },
+  '1': {
+    orbit:  '20deg 55deg 110%',
+    target: '0m 1.8m 0m',
+    name:   'First Floor',
+    desc:   'Fashion district · Food court · Brand flagships'
+  },
+  '2': {
+    orbit:  '0deg 38deg 95%',
+    target: '0m 3.5m 0m',
+    name:   'Second Floor',
+    desc:   'Entertainment · Nickelodeon Universe · Specialty retail'
+  }
+};
+
+function setFloor(f) {
+  var mv = document.getElementById('mall-model');
+  if (!mv) return;
+
+  /* Update button states */
+  ['g','1','2'].forEach(function(k) {
+    var btn = document.getElementById('fbtn-' + k);
+    if (btn) btn.classList.toggle('active', k === f);
+  });
+
+  /* Update info bar */
+  var nameEl = document.getElementById('floor-info-name');
+  var descEl = document.getElementById('floor-info-desc');
+  if (nameEl) nameEl.textContent = FLOORS[f].name;
+  if (descEl) descEl.textContent = FLOORS[f].desc;
+
+  /* Pause auto-rotate, move camera */
+  mv.removeAttribute('auto-rotate');
+  mv.setAttribute('camera-orbit',  FLOORS[f].orbit);
+  mv.setAttribute('camera-target', FLOORS[f].target);
+
+  /* Resume auto-rotate after 5s idle */
+  clearTimeout(_floorTimer);
+  _floorTimer = setTimeout(function() {
+    mv.setAttribute('auto-rotate', '');
+  }, 5000);
+}
+
+/* ── MODEL VIEWER INIT ── */
+function initModelViewer() {
+  var mv = document.getElementById('mall-model');
+  if (!mv) return;
+
+  /* Pause auto-rotate on user drag; resume after 4s */
+  mv.addEventListener('camera-change', function(e) {
+    if (e.detail && e.detail.source === 'user-interaction') {
+      mv.removeAttribute('auto-rotate');
+      clearTimeout(_floorTimer);
+      _floorTimer = setTimeout(function() {
+        mv.setAttribute('auto-rotate', '');
+      }, 4000);
+    }
+  });
+
+  /* Pause rendering when scrolled out of view (performance) */
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        mv.setAttribute('auto-rotate', '');
+      } else {
+        mv.removeAttribute('auto-rotate');
+      }
+    });
+  }, { threshold: 0.1 });
+  obs.observe(mv);
+}
+
+/* ── NAV ── */
+function initNav(){
+  const nav=document.getElementById('nav');
+  ScrollTrigger.create({
+    start:'top -80',
+    onUpdate:(self)=>{nav.classList.toggle('solid',self.scroll()>80);}
+  });
+  document.querySelectorAll('[data-scroll]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.getElementById(btn.dataset.scroll).scrollIntoView({behavior:'smooth'});
+    });
+  });
+  ['section-intro','section-retail','section-dining','section-attract','section-events','section-sponsor'].forEach(id=>{
+    ScrollTrigger.create({
+      trigger:'#'+id, start:'top center', end:'bottom center',
+      onEnter:()=>setActiveNav(id), onEnterBack:()=>setActiveNav(id),
+    });
+  });
+}
+function setActiveNav(id){
+  document.querySelectorAll('.nav-link').forEach(l=>{
+    l.classList.toggle('active', l.dataset.scroll===id);
+  });
+}
+
+/* ── SCROLL REVEAL ── */
+function initScrollAnimations(){
+  document.querySelectorAll('.reveal').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,y:40},{opacity:1,y:0,duration:0.9,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 88%',once:true}
+    });
+  });
+  document.querySelectorAll('.reveal-left').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,x:-40},{opacity:1,x:0,duration:0.9,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 88%',once:true}
+    });
+  });
+  document.querySelectorAll('.reveal-right').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,x:40},{opacity:1,x:0,duration:0.9,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 88%',once:true}
+    });
+  });
+  document.querySelectorAll('.reveal-scale').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,scale:0.93},{opacity:1,scale:1,duration:1,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 85%',once:true}
+    });
+  });
+}
+
+/* ── GALLERY ROTATION ── */
+function initGalleries(){
+  const panels=['retail','dining','attract'];
+  panels.forEach(panel=>{
+    let active=0;
+    const imgs=document.querySelectorAll(`[data-panel="${panel}"][data-i]`);
+    const thumbs=document.querySelectorAll(`.zone-thumb[data-panel="${panel}"]`);
+    function show(i){
+      imgs.forEach((img,idx)=>img.classList.toggle('active',idx===i));
+      thumbs.forEach((t,idx)=>t.classList.toggle('active',idx===i));
+      active=i;
+    }
+    thumbs.forEach((t,idx)=>t.addEventListener('click',()=>show(idx)));
+    setInterval(()=>show((active+1)%imgs.length),4000);
+  });
+}
+
+/* ── COUNTER ANIMATION ── */
+function initCounters(){
+  document.querySelectorAll('[data-target]').forEach(el=>{
+    const target=parseFloat(el.dataset.target);
+    const isDecimal=target%1!==0;
+    ScrollTrigger.create({
+      trigger:el, start:'top 85%', once:true,
+      onEnter:()=>{
+        gsap.to({val:0},{val:target,duration:2,ease:'power2.out',
+          onUpdate:function(){
+            el.textContent=(isDecimal?this.targets()[0].val.toFixed(1):Math.floor(this.targets()[0].val))+(target>=100?'+':target>=10?'M':isDecimal?'M':'M');
+          }
+        });
+      }
+    });
+  });
+}
+
+/* ── PARALLAX ── */
+document.querySelectorAll('.zone-img.active').forEach(img=>{
+  gsap.to(img,{
+    yPercent:-8, ease:'none',
+    scrollTrigger:{trigger:img.closest('.zone-section'),scrub:1}
+  });
+});
+</script>
+</body>
+</html>
